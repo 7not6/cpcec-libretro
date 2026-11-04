@@ -38,6 +38,10 @@ Contact information: <mailto:cngsoft@gmail.com> */
 #include <stdlib.h> // strtol()...
 #include <string.h> // strcpy()...
 
+#ifdef __LIBRETRO__
+#include "libretro-core.h"
+#endif
+
 // Commodore 64 PAL metrics and constants defined as general types -- //
 
 #define VIDEO_PLAYBACK 50
@@ -4157,8 +4161,11 @@ void session_configwritemore(FILE *f) // update the configuration file `f` with 
 }
 
 // START OF USER INTERFACE ========================================== //
-
+#ifdef __LIBRETRO__
+int bmain(int argc,char *argv[])
+#else
 int main(int argc,char *argv[])
+#endif
 {
 	session_prae(ARGVZERO); all_setup(); all_reset();
 	int i=0,j,k=m6510_pc.w=0; while (++i<argc) // see later about m6510_pc

@@ -132,10 +132,23 @@ void session_debug_show(void); // redraw the debugger text, reloading it if requ
 int session_debug_user(int); // debug logic takes priority: 0 UNKNOWN COMMAND, !0 OK
 int debug_xlat(int); // translate debug keys into codes (f.e. cursors)
 
+#ifdef __LIBRETRO__
+#include <math.h>
+#define SDL_pow pow
+#define SDL_sin sin
+#define SDL_LIL_ENDIAN  1234
+#define SDL_BIG_ENDIAN  4321
+#define SDL_BYTEORDER SDL_LIL_ENDIAN
+#undef SDL_MAIN_HANDLED 
+#include "cpcec-ol.h"
+#else
+
 #ifdef SDL2 // optional inside Win32, required elsewhere!
 #include "cpcec-ox.h"
 #else // Win32 (+4.0)
 #include "cpcec-os.h"
+#endif
+
 #endif
 
 // The following routines can be shared across emulators and operating
@@ -1043,6 +1056,7 @@ INLINE void session_update(void) // render video+audio and handle self-adjusting
 		performance_t+=session_clock; performance_f=performance_b=session_paused=0;
 		session_title(session_tmpstr);
 	}
+	
 	if (video_required) // redraw window if it was already required!
 		if (!video_interlaces||!video_interlaced)
 			{ performance_b+=video_interlaced+1; session_drawme(); }
@@ -1054,6 +1068,7 @@ INLINE void session_update(void) // render video+audio and handle self-adjusting
 			else --video_framecount;
 		else --r;
 	}
+	#ifndef __LIBRETRO__
 	if (session_wait|session_fast)
 	{
 		session_timer=i; // ensure that the next frame can be valid!
@@ -1071,6 +1086,7 @@ INLINE void session_update(void) // render video+audio and handle self-adjusting
 		else if (i+j<0)
 			{ if (!session_filmfile) video_framecount=video_framelimit+1; } // skip one extra frame on timeout!
 	}
+	#endif
 	if (session_audio) session_playme(); // manage audio buffer
 	audio_required=!audio_disabled||session_filmfile||session_wavefile; // ensures that audio is saved to WAV or XRF even without sound hardware
 	frame_pos_y=video_pos_y; if (!(video_required=!video_framecount&&!r)) frame_pos_y+=VIDEO_LENGTH_Y*4; // simplify several frameskipping operations
